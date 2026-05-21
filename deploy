@@ -1,6 +1,10 @@
 #!/bin/bash
-cp ~/Downloads/index.html ~/Desktop/clarity/index.html
-cd ~/Desktop/clarity
+set -e
+REPO="$(cd "$(dirname "$0")" && pwd)"
+cp ~/Downloads/index.html "$REPO/index.html"
+cd "$REPO"
 git add index.html
-git commit -m "Update index.html" || echo "Nothing new to commit."
+git diff --cached --quiet && echo "Nothing new to commit." && exit 0
+git commit -m "Update index.html"
 git push
+echo "Deployed."

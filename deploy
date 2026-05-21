@@ -1,0 +1,6 @@
+#!/bin/bash
+cp ~/Downloads/index.html ~/Desktop/clarity/index.html
+cd ~/Desktop/clarity
+git add index.html
+git commit -m "Update index.html" || echo "Nothing new to commit."
+git push

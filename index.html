@@ -284,7 +284,7 @@ function lastSleep(){ var e=S.evenings.filter(function(x){return x.date===yestSt
 function socialDays(){ var s=S.evenings.slice().sort(function(a,b){return b.date.localeCompare(a.date);}); var c=0; for(var i=0;i<s.length;i++){if(!s[i].social)c++;else break;} return c; }
 
 function callAI(sys, msg, maxTok){
-  return fetch('https://api.anthropic.com/v1/messages',{
+  return fetch('https://clarity-proxy.clarity-proxy.workers.dev/v1/messages',{
     method:'POST', headers:{'Content-Type':'application/json'},
     body: JSON.stringify({ model:'claude-sonnet-4-20250514', max_tokens:maxTok||2000, system:sys, messages:[{role:'user',content:msg}] })
   })

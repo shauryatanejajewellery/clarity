@@ -203,6 +203,7 @@ body{font-family:var(--sans);background:var(--paper);color:var(--ink);min-height
 
 
 
+
 var KEY='clarity_v4', DLOG='clarity_dumps_v4';
 
 function blank(){
@@ -1582,11 +1583,12 @@ function stopListening(){
 function confirmVoice(){
   var transcript = _fullTranscript.trim();
   if(!transcript) return;
-  // put transcript into dump-in and run
   document.getElementById('dump-in').value = transcript;
   document.getElementById('voice-confirm').style.display = 'none';
   document.getElementById('voice-status').textContent = 'Sorting...';
-  runDump();
+  document.getElementById('voice-transcript').textContent = transcript;
+  // small delay to ensure textarea value is set before runDump reads it
+  setTimeout(function(){ runDump(); }, 50);
 }
 
 function retryVoice(){
@@ -1618,6 +1620,7 @@ S.events = S.events.filter(function(e){
 persist();
 buildToday();
 syncFromCloud();
+
 
 
 

@@ -466,25 +466,33 @@ function renderClarification(idx){
   var el = document.getElementById('dump-clarify');
   if(idx >= dumpPending.length){ el.style.display='none'; return; }
   var item = dumpPending[idx];
+  var inputId = 'clarify-input-'+idx;
   el.style.display = 'block';
   el.innerHTML = '<div style="background:var(--amber-p);border:1px solid var(--amber-b);border-radius:var(--r);padding:18px 20px">'
     +'<div style="font-size:0.7rem;letter-spacing:0.1em;text-transform:uppercase;color:var(--amber);font-weight:500;margin-bottom:6px">One question — '+(idx+1)+' of '+dumpPending.length+'</div>'
     +'<div style="font-size:0.9rem;font-weight:500;color:var(--ink);margin-bottom:4px">'+item.name+'</div>'
     +'<div style="font-size:0.82rem;color:var(--ink-mid);font-weight:300;margin-bottom:14px">'+(item.clarificationQuestion||'When does this need to happen by?')+'</div>'
-    +'<div style="display:flex;gap:8px;flex-wrap:wrap">'
-    +'<button class="pill" onclick="answerClarify(\''+item.id+'\',\'TODAY\','+idx+')">Today</button>'
-    +'<button class="pill" onclick="answerClarify(\''+item.id+'\',\'THIS_WEEK\','+idx+')">This week</button>'
-    +'<button class="pill" onclick="answerClarify(\''+item.id+'\',\'SOON\','+idx+')">Not urgent</button>'
+    +'<div style="display:flex;gap:8px;align-items:center">'
+    +'<input id="'+inputId+'" type="text" placeholder="Type your answer…" style="flex:1;padding:8px 12px;border:1px solid var(--amber-b);border-radius:var(--r);font-size:0.84rem;background:var(--bg);color:var(--ink);outline:none" />'
+    +'<button class="pill" onclick="answerClarify(\''+item.id+'\',document.getElementById(\''+inputId+'\').value,'+idx+')">Submit</button>'
     +'<button class="btn-o" style="font-size:0.74rem;padding:6px 12px" onclick="skipClarify('+idx+')">Skip</button>'
     +'</div></div>';
   el.scrollIntoView({behavior:'smooth', block:'nearest'});
+  var input = document.getElementById(inputId);
+  if(input){ input.focus(); input.addEventListener('keydown', function(e){ if(e.key==='Enter'){ answerClarify(item.id, input.value, idx); } }); }
 }
 
-function answerClarify(id, bucket, idx){
+function answerClarify(id, answer, idx){
   var item = dumpPending.filter(function(t){ return t.id===id; })[0];
-  if(item){ item.bucket=bucket; item.needsClarification=false; item.urgency=bucket==='TODAY'?'high':bucket==='THIS_WEEK'?'medium':'low'; }
+  if(item){
+    var a = (answer||'').toLowerCase();
+    var urgency = a.indexOf('today')>=0||a.indexOf('urgent')>=0||a.indexOf('asap')>=0 ? 'high'
+                : a.indexOf('week')>=0||a.indexOf('soon')>=0 ? 'medium' : 'low';
+    item.clarificationAnswer = answer;
+    item.needsClarification = false;
+    item.urgency = urgency;
+  }
   renderClarification(idx+1);
-  // add to results
   var allClear = dumpItems.filter(function(t){ return !t.needsClarification; });
   renderDumpResults(allClear);
 }

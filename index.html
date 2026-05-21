@@ -91,6 +91,16 @@ body{font-family:var(--sans);background:var(--paper);color:var(--ink);min-height
 .field-select{width:100%;background:var(--paper);border:1.5px solid var(--border);border-radius:var(--r);padding:10px 14px;font-family:var(--sans);font-size:0.88rem;color:var(--ink);outline:none;appearance:none;cursor:pointer}
 .field-row-2{display:grid;grid-template-columns:1fr 1fr;gap:12px}
 .btn-danger{background:var(--fire-p);color:var(--fire);border:1px solid var(--fire-b);border-radius:var(--r);padding:10px 18px;font-family:var(--sans);font-size:0.8rem;cursor:pointer}
+
+/* ── VOICE ── */
+.voice-btn{width:64px;height:64px;border-radius:50%;border:none;cursor:pointer;display:flex;align-items:center;justify-content:center;transition:all 0.2s;flex-shrink:0}
+.voice-btn.idle{background:var(--paper-3)}
+.voice-btn.listening{background:var(--fire);animation:pulse-ring 1.2s ease-out infinite}
+.voice-btn.processing{background:var(--amber)}
+@keyframes pulse-ring{0%{box-shadow:0 0 0 0 rgba(194,65,12,0.4)}70%{box-shadow:0 0 0 16px rgba(194,65,12,0)}100%{box-shadow:0 0 0 0 rgba(194,65,12,0)}}
+.voice-icon{font-size:1.5rem;pointer-events:none}
+.voice-transcript{min-height:60px;font-size:0.9rem;color:var(--ink);font-weight:300;line-height:1.7;font-style:italic;color:var(--ink-mid)}
+.voice-confirm{background:var(--sage-p);border:1px solid var(--sage-b);border-radius:var(--r-lg);padding:18px 20px;margin-top:16px;display:none}
 </style>
 </head>
 <body>
@@ -105,11 +115,42 @@ body{font-family:var(--sans);background:var(--paper);color:var(--ink);min-height
       <button class="btn-o" style="font-size:0.74rem;padding:7px 14px;white-space:nowrap;flex-shrink:0" onclick="toggleHistory()">Past dumps</button>
     </div>
     <div id="hist-panel" style="display:none;margin-bottom:22px"></div>
-    <textarea class="ta" id="dump-in" rows="7" placeholder="Just write. Do not filter.&#10;&#10;green card trip i keep delaying&#10;call priya about her ring she messaged 3 days ago&#10;dentist appointment overdue&#10;book birthday trip with girlfriend - october&#10;design new summer collection&#10;GST filing coming up&#10;silversmith delayed my order"></textarea>
-    <div style="display:flex;gap:9px;margin-top:12px;flex-wrap:wrap;align-items:center">
-      <button class="btn" id="dump-btn" onclick="runDump()">Sort it out</button>
-      <button class="btn-o" onclick="document.getElementById('dump-in').value=''">Clear</button>
-      <span style="font-size:0.72rem;color:var(--ink-faint);font-style:italic">Cmd+Enter</span>
+    <!-- VOICE OR TYPE TOGGLE -->
+    <div style="display:flex;gap:8px;margin-bottom:16px">
+      <button class="btn-o" id="mode-voice" onclick="setMode('voice')" style="font-size:0.76rem;padding:7px 16px;background:var(--ink);color:var(--paper);border-color:var(--ink)">🎤 Speak</button>
+      <button class="btn-o" id="mode-type" onclick="setMode('type')" style="font-size:0.76rem;padding:7px 16px">✏️ Type</button>
+    </div>
+
+    <!-- VOICE MODE -->
+    <div id="voice-mode">
+      <div style="display:flex;flex-direction:column;align-items:center;gap:16px;padding:16px 0">
+        <button class="voice-btn idle" id="voice-btn" onclick="toggleVoice()">
+          <span class="voice-icon" id="voice-icon">🎤</span>
+        </button>
+        <div style="font-size:0.78rem;color:var(--ink-faint);text-align:center" id="voice-status">Tap to speak</div>
+      </div>
+      <div style="background:var(--white);border:1.5px solid var(--border);border-radius:var(--r-lg);padding:18px;min-height:80px;margin-bottom:12px">
+        <div class="voice-transcript" id="voice-transcript">Your words will appear here...</div>
+      </div>
+      <div class="voice-confirm" id="voice-confirm">
+        <div style="font-size:0.78rem;color:var(--sage);font-weight:500;margin-bottom:10px">Does this look right?</div>
+        <div style="font-size:0.84rem;color:var(--ink-mid);font-weight:300;line-height:1.6;margin-bottom:14px" id="voice-preview"></div>
+        <div style="display:flex;gap:8px;flex-wrap:wrap">
+          <button class="btn" onclick="confirmVoice()">Yes, sort it out</button>
+          <button class="btn-o" style="font-size:0.78rem" onclick="retryVoice()">No, try again</button>
+          <button class="btn-o" style="font-size:0.78rem" onclick="editVoice()">Edit first</button>
+        </div>
+      </div>
+    </div>
+
+    <!-- TYPE MODE -->
+    <div id="type-mode" style="display:none">
+      <textarea class="ta" id="dump-in" rows="7" placeholder="Just write. Do not filter.&#10;&#10;green card trip i keep delaying&#10;call priya about her ring&#10;dentist appointment overdue&#10;book birthday trip girlfriend - october&#10;design new summer collection&#10;GST filing coming up"></textarea>
+      <div style="display:flex;gap:9px;margin-top:12px;flex-wrap:wrap;align-items:center">
+        <button class="btn" id="dump-btn" onclick="runDump()">Sort it out</button>
+        <button class="btn-o" onclick="document.getElementById('dump-in').value=''">Clear</button>
+        <span style="font-size:0.72rem;color:var(--ink-faint);font-style:italic">Cmd+Enter</span>
+      </div>
     </div>
     <div id="dump-load" style="display:none" class="loading"><div class="dots"><span></span><span></span><span></span></div><p id="dump-load-txt">Reading what you wrote...</p></div>
     <div id="dump-msg"></div>
@@ -154,6 +195,7 @@ body{font-family:var(--sans);background:var(--paper);color:var(--ink);min-height
 <div class="shell"><div id="pat-body"></div></div>
 </div>
 <script>
+
 
 
 
@@ -1447,6 +1489,121 @@ function formatTime12(t){
 // close on escape key
 document.addEventListener('keydown', function(e){ if(e.key==='Escape') closeEditModal(); });
 
+
+// ── VOICE DUMP ──
+var _recognition = null;
+var _isListening = false;
+var _fullTranscript = '';
+
+function setMode(mode){
+  document.getElementById('voice-mode').style.display = mode==='voice' ? 'block' : 'none';
+  document.getElementById('type-mode').style.display  = mode==='type'  ? 'block' : 'none';
+  document.getElementById('mode-voice').style.background = mode==='voice' ? 'var(--ink)' : 'transparent';
+  document.getElementById('mode-voice').style.color = mode==='voice' ? 'var(--paper)' : 'var(--ink-mid)';
+  document.getElementById('mode-voice').style.borderColor = mode==='voice' ? 'var(--ink)' : 'var(--border)';
+  document.getElementById('mode-type').style.background = mode==='type' ? 'var(--ink)' : 'transparent';
+  document.getElementById('mode-type').style.color = mode==='type' ? 'var(--paper)' : 'var(--ink-mid)';
+  document.getElementById('mode-type').style.borderColor = mode==='type' ? 'var(--ink)' : 'var(--border)';
+}
+
+function toggleVoice(){
+  if(_isListening){ stopListening(); return; }
+  startListening();
+}
+
+function startListening(){
+  var SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
+  if(!SpeechRecognition){
+    alert('Voice not supported on this browser. Use Safari on iPhone or Chrome on desktop.');
+    return;
+  }
+  _recognition = new SpeechRecognition();
+  _recognition.continuous = true;
+  _recognition.interimResults = true;
+  _recognition.lang = 'en-IN';
+
+  _fullTranscript = '';
+  document.getElementById('voice-transcript').textContent = '';
+  document.getElementById('voice-confirm').style.display = 'none';
+
+  _recognition.onstart = function(){
+    _isListening = true;
+    var btn = document.getElementById('voice-btn');
+    btn.className = 'voice-btn listening';
+    document.getElementById('voice-icon').textContent = '⏹';
+    document.getElementById('voice-status').textContent = 'Listening... tap to stop';
+  };
+
+  _recognition.onresult = function(event){
+    var interim = '';
+    var final = '';
+    for(var i = event.resultIndex; i < event.results.length; i++){
+      var transcript = event.results[i][0].transcript;
+      if(event.results[i].isFinal){ final += transcript + ' '; }
+      else { interim += transcript; }
+    }
+    if(final) _fullTranscript += final;
+    document.getElementById('voice-transcript').textContent = (_fullTranscript + interim).trim() || 'Your words will appear here...';
+  };
+
+  _recognition.onerror = function(e){
+    stopListening();
+    if(e.error !== 'no-speech'){
+      document.getElementById('voice-status').textContent = 'Error: ' + e.error + '. Try again.';
+    }
+  };
+
+  _recognition.onend = function(){
+    if(_isListening) stopListening();
+  };
+
+  _recognition.start();
+}
+
+function stopListening(){
+  _isListening = false;
+  if(_recognition){ try{ _recognition.stop(); }catch(e){} }
+  var btn = document.getElementById('voice-btn');
+  btn.className = 'voice-btn idle';
+  document.getElementById('voice-icon').textContent = '🎤';
+
+  var transcript = _fullTranscript.trim();
+  if(!transcript){
+    document.getElementById('voice-status').textContent = 'Nothing heard. Tap to try again.';
+    return;
+  }
+
+  // Show confirmation
+  document.getElementById('voice-status').textContent = 'Got it. Does this look right?';
+  document.getElementById('voice-preview').textContent = transcript;
+  document.getElementById('voice-confirm').style.display = 'block';
+}
+
+function confirmVoice(){
+  var transcript = _fullTranscript.trim();
+  if(!transcript) return;
+  // put transcript into dump-in and run
+  document.getElementById('dump-in').value = transcript;
+  document.getElementById('voice-confirm').style.display = 'none';
+  document.getElementById('voice-status').textContent = 'Sorting...';
+  runDump();
+}
+
+function retryVoice(){
+  _fullTranscript = '';
+  document.getElementById('voice-transcript').textContent = 'Your words will appear here...';
+  document.getElementById('voice-confirm').style.display = 'none';
+  document.getElementById('voice-status').textContent = 'Tap to speak';
+}
+
+function editVoice(){
+  // switch to type mode with transcript pre-filled
+  document.getElementById('dump-in').value = _fullTranscript.trim();
+  setMode('type');
+  document.getElementById('voice-confirm').style.display = 'none';
+  setTimeout(function(){ document.getElementById('dump-in').focus(); }, 100);
+}
+
 // ── INIT ──
 document.getElementById('dump-in').addEventListener('keydown', function(e){ if((e.metaKey||e.ctrlKey)&&e.key==='Enter') runDump(); });
 // clean up any placeholder tasks from old versions
@@ -1461,6 +1618,7 @@ S.events = S.events.filter(function(e){
 persist();
 buildToday();
 syncFromCloud();
+
 
 
 

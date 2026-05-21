@@ -286,7 +286,7 @@ function socialDays(){ var s=S.evenings.slice().sort(function(a,b){return b.date
 function callAI(sys, msg, maxTok){
   return fetch('https://clarity-proxy.clarity-proxy.workers.dev/v1/messages',{
     method:'POST', headers:{'Content-Type':'application/json'},
-    body: JSON.stringify({ model:'claude-sonnet-4-20250514', max_tokens:maxTok||2000, system:sys, messages:[{role:'user',content:msg}] })
+    body: JSON.stringify({ model:'claude-haiku-4-5-20251001', max_tokens:maxTok||2000, system:sys, messages:[{role:'user',content:msg}] })
   })
   .then(function(r){ return r.json(); })
   .then(function(d){ if(d.error) throw new Error(d.error.message||'API error'); return d.content.map(function(b){return b.text||'';}).join(''); });
